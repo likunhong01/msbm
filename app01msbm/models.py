@@ -27,7 +27,7 @@ class Activity(models.Model):
     activity_start_time = models.DateTimeField(verbose_name='开始时间', default=timezone.now)
     activity_end_time = models.DateTimeField(verbose_name='截止时间')
     activity_introduce = models.CharField(verbose_name='活动简介', max_length=256)
-    activity_address = models.CharField(verbose_name='活动举办历史', max_length=64)
+    activity_address = models.CharField(verbose_name='活动地址', max_length=64)
     activity_owner = models.ForeignKey(verbose_name='活动发起人', to='UserInformation', to_field='user_id', on_delete=models.CASCADE)
     activity_unit = models.CharField(verbose_name='活动主办单位', max_length=32)
 
@@ -45,6 +45,13 @@ class ActivityLogin(models.Model):
     info = models.CharField(verbose_name='活动报名表的信息', max_length=16)
 
 
+# 用户在哪个活动的哪个填框内填的那个值
+# 列是：用户id（user_id），活动id(activity_id)，活动要填的某列（info），那一列的值(value)
+class UserActivityValue(models.Model):
+    user_id = models.ForeignKey(verbose_name='用户id', to='UserInformation', to_field='user_id', on_delete=models.CASCADE)
+    activity_id = models.ForeignKey(verbose_name='活动', to='Activity', to_field='activity_id', on_delete=models.CASCADE)
+    info = models.CharField(verbose_name='列（框）', max_length=16)
+    value = models.CharField(verbose_name='用户填入列（框）的值', max_length=32)
 
 
 

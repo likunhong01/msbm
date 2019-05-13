@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^mycreate/', views.my_create),    # 获取我创建的活动
     url(r'^activity/', views.activity), # 获取单个活动信息
     url(r'^applyuser/', views.apply_user),  # 获取单个活动的报名人列表
+    url(r'^downactivityexcel/', views.down_activity_excel),  # 下载excel
 ]

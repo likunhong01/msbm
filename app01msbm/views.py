@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import requests, json
 from app01msbm import models
-
+import xlwt
+from django.db.models import Sum,Count
 # Create your views here.
 
 def login(request):
@@ -96,3 +97,52 @@ def apply_user(request):
             peoples.append(people)
 
         return JsonResponse(data=peoples, safe=False)
+
+def down_activity_excel(request):
+    if request.method == 'GET':
+        # 从前端获取
+        activity_id = request.GET.get('activity_id')
+
+        # 首先获得这个活动的报名需要填的信息
+        need_info_fromsql = models.ActivityLogin.objects.filter(activity_id=activity_id)
+        need_infos = []
+        for info in need_info_fromsql:
+            need_infos.append(info.info)
+
+
+        # 获取活动报名信息
+        # 列是：用户id（user_id），活动id(activity_id)，活动要填的某列（info），那一列的值(value)
+        activity_infos = models.UserActivityValue.objects.filter(activity_id=activity_id)
+        # 然后对每个用户分组获取他们填的信息
+
+        # 把这个字典存入
+
+
+
+        # 把数据库数据转化为excel文件
+        def txt_xls(filename, xlsname):
+            """
+            :文本转换成xls的函数
+            :param filename txt文本文件名称、
+            :param xlsname 表示转换后的excel文件名
+            """
+            try:
+                f = open(filename)
+                xls = xlwt.Workbook()
+                # 生成excel的方法，声明excel
+                sheet = xls.add_sheet('sheet1', cell_overwrite_ok=True)
+                x = 0
+                while True:
+                    # 按行循环，读取文本文件
+                    line = f.readline()
+                    if not line:
+                        break  # 如果没有内容，则退出循环
+                    for i in range(len(line.split('\t'))):
+                        item = line.split('\t')[i]
+                        sheet.write(x, i, item)  # x单元格经度，i 单元格纬度
+                    x += 1  # excel另起一行
+                f.close()
+                xls.save(xlsname)  # 保存xls文件
+            except:
+                raise
+
