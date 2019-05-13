@@ -81,3 +81,18 @@ def activity(request):
 
         return JsonResponse(data=response, safe=False)
 
+# 查看报名某个活动的用户
+def apply_user(request):
+    if request.method == 'GET':
+        activity_id = request.GET.get('activity_id')
+        users = models.UserActivity.objects.filter(activity_id=activity_id, effective=1)
+        peoples = []
+        '''!!!!!!!!!!!!!!缺少存到文件里的代码'''
+        for user in users:
+            people = {}
+            now_people = models.UserInformation.objects.get(user_id=user.user_id)
+            people['user_name'] = now_people.user_name
+            people['telephone'] = now_people.telephone
+            peoples.append(people)
+
+        return JsonResponse(data=peoples, safe=False)
