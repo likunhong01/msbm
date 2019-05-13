@@ -23,5 +23,7 @@ from app01msbm import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^login/', views.login),
-    url(r'^mytable', views.my_table)
+    url(r'^mytable/', views.my_table),
+    url(r'^mycreate/', views.my_create),
+    url(r'^activity/', views.activity),
 ]

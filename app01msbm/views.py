@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 import requests, json
+from app01msbm import models
 
 # Create your views here.
 
@@ -29,4 +30,54 @@ def my_table(request):
     # 返回已报名列表
     if request.method == 'GET':
         openid = request.GET.get('openid')
+        joined_activities = models.UserActivity.objects.filter(user_id=openid, effective=1)
+        # 返回结果response是一个列表，列表里是字典，存放活动相关信息
+        response = []
+        for activity in joined_activities:
+            # 一个活动的字典
+            act = {}
+            # 获取名称， 起止时间，发起人单位， 活动id，存入字典
+            act['activity_unit'] = activity.activity_unit
+            act['activity_name'] = activity.activity_name
+            act['activity_start_time'] = activity.activity_start_time
+            act['activity_end_time'] = activity.activity_end_time
+            act['activity_id'] = activity.activity_id
+            response.append(act)
+
+        return JsonResponse(data=response, safe=False)
+
+def my_create(request):
+    # 返回自己创建的活动的列表
+    if request.method == 'GET':
+        openid = request.GET.get('openid')
+        joined_activities = models.Activity.objects.filter(activity_owner=openid, effective=1)
+        # 返回结果response是一个列表，列表里是字典，存放活动相关信息
+        response = []
+        for activity in joined_activities:
+            # 一个活动的字典
+            act = {}
+            # 获取名称， 起止时间，发起人单位， 活动id，存入字典
+            act['activity_unit'] = activity.activity_unit
+            act['activity_name'] = activity.activity_name
+            act['activity_start_time'] = activity.activity_start_time
+            act['activity_end_time'] = activity.activity_end_time
+            act['activity_id'] = activity.activity_id
+            response.append(act)
+
+        return JsonResponse(data=response, safe=False)
+
+# 单个表处理
+def activity(request):
+    if request.method == 'GET':
+        activity_id = request.GET.get('activity_id')
+        activity = models.Activity.objects.get(activity_id=activity_id)
+        response = {}
+        response['activity_name'] = activity.activity_name
+        response['activity_start_time'] = activity.activity_start_time
+        response['activity_end_time'] = activity.activity_end_time
+        response['activity_introduce'] = activity.activity_introduce
+        response['activity_address'] = activity.activity_address
+        response['activity_owner'] = activity.activity_owner
+
+        return JsonResponse(data=response, safe=False)
 
