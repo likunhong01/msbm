@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 import requests, json
 from app01msbm import models
 import xlwt
@@ -103,46 +103,60 @@ def down_activity_excel(request):
         # 从前端获取
         activity_id = request.GET.get('activity_id')
 
-        # 首先获得这个活动的报名需要填的信息
+        # 首先获得这个活动的报名需要填的信息（列）
         need_info_fromsql = models.ActivityLogin.objects.filter(activity_id=activity_id)
         need_infos = []
         for info in need_info_fromsql:
             need_infos.append(info.info)
 
+        response = []   # 返回结果，是一个字典列表，每个字典是每个人的报名信息
 
         # 获取活动报名信息
         # 列是：用户id（user_id），活动id(activity_id)，活动要填的某列（info），那一列的值(value)
         activity_infos = models.UserActivityValue.objects.filter(activity_id=activity_id)
+        # 遍历每行，获取到有哪些用户（按用户分组）
+        users = []
+        for activity_info in activity_infos:
+            if activity_info.user_id not in users:
+                users.append(activity_info.user_id)
         # 然后对每个用户分组获取他们填的信息
+        for user in users:
+            now_user = {}   # 用户报名信息的字典
+            # 获得单个用户的报名表信息（包括好几条）
+            user_info = activity_infos.filter(user_id=user.user_id)
+            for single_info in user_info:
+                now_user[single_info.info] = single_info.value
+            response.append(now_user)   # 把每个人的信息字典加入回复前端的字典中
 
-        # 把这个字典存入
 
+        # 把回复前端的response内的字典数据转化为excel文件
+        '''待完成'''
+        excel_content = []  # 要写入excel的二维列表
+        excel_content.append(need_infos)    # 先写入标题（列名称）
+        # 对回应的response数组取每个人的信息（字典格式）
+        for single_user_apply_table in response:
+            single_user_info = []
+            # 取字典里每个列的值
+            for lie in need_infos:
+                single_user_info.append(single_user_apply_table[lie])
+            excel_content.append(single_user_info)
 
+        # excel_content就是要存入的
+        # 指定file以utf-8的格式打开
+        file = xlwt.Workbook(encoding='utf-8')
+        table = file.add_sheet('data')
+        # 指定打开的文件名
+        for i, p in enumerate(excel_content):
+            # 将数据写入文件,i是enumerate()函数返回的序号数
+            for j, q in enumerate(p):
+                # print i,j,q
+                table.write(i, j, q)
+        file.save('data.xlsx')
 
-        # 把数据库数据转化为excel文件
-        def txt_xls(filename, xlsname):
-            """
-            :文本转换成xls的函数
-            :param filename txt文本文件名称、
-            :param xlsname 表示转换后的excel文件名
-            """
-            try:
-                f = open(filename)
-                xls = xlwt.Workbook()
-                # 生成excel的方法，声明excel
-                sheet = xls.add_sheet('sheet1', cell_overwrite_ok=True)
-                x = 0
-                while True:
-                    # 按行循环，读取文本文件
-                    line = f.readline()
-                    if not line:
-                        break  # 如果没有内容，则退出循环
-                    for i in range(len(line.split('\t'))):
-                        item = line.split('\t')[i]
-                        sheet.write(x, i, item)  # x单元格经度，i 单元格纬度
-                    x += 1  # excel另起一行
-                f.close()
-                xls.save(xlsname)  # 保存xls文件
-            except:
-                raise
+        # 把文件发给客户端
+        excel_file = open('data.xlsx', 'rb')
+        response = HttpResponse(excel_file)
+        response['Content-Type'] = 'application/octet-stream'  # 设置头信息，告诉浏览器这是个文件
+        response['Content-Disposition'] = 'attachment;filename="apply_infomation.xlsx"' # 重命名文件
 
+        return response
