@@ -18,8 +18,10 @@ from django.urls import path
 from django.conf.urls import url
 
 from app01msbm import views
-
+# http://www.ifeels.cn:35558/login/
+# 35558端口
 urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^login/', views.login),
+    url(r'^mytable', views.my_table)
 ]

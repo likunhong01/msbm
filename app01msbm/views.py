@@ -24,3 +24,9 @@ def login(request):
         response['openid'] = openid
         return JsonResponse(data=response,safe=False)
 
+
+def my_table(request):
+    # 返回已报名列表
+    if request.method == 'GET':
+        openid = request.GET.get('openid')
+
