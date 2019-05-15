@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
+from django.core.cache import cache
 import requests, json
 from app01msbm import models
 import xlwt
@@ -160,3 +161,110 @@ def down_activity_excel(request):
         response['Content-Disposition'] = 'attachment;filename="apply_infomation.xlsx"' # 重命名文件
 
         return response
+
+
+
+
+# 获得access_token 并放入缓存
+def get_access_token():
+    app_id = 'wx6b7b3078d85781ae'
+    app_secret = 'be19c75c943ac1b4065066087826e890'
+    # 获取缓存里的access_token
+    access_token_key = 'access_token_key'
+    access_token = cache.get(access_token_key)
+    # 判断access_token是否过期，如果没有则返回access_token,如果已过期则重新请求
+    if access_token:
+        return access_token
+    else:
+        token_url = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s' % (app_id,
+                                                                                                                 app_secret)
+        # 发送get请求并获取返回值
+        token_response = requests.get(url=token_url)
+        # 获取access_token
+        access_token = json.loads(token_response.text).get('access_token')
+        # 获取有效时间
+        expires_in = json.loads(token_response.text).get('expires_in')
+        print(access_token)
+        print(expires_in)
+        if access_token and expires_in:
+            cache.set(access_token_key, access_token, expires_in - 60)
+        return access_token
+
+
+# 提交报名表
+def submit_entry_form(request):
+    # 判断请求方式
+    if request.method == 'POST':
+        # 获取前端数据
+        receiveBody = request.body
+        receiveBody = json.loads(receiveBody)
+        activity_name = receiveBody.get('activity_name')
+        activity_start_time = receiveBody.get('activity_start_time')
+        activity_end_time = receiveBody.get('activity_end_time')
+        activity_introduce = receiveBody.get('activity_introduce')
+        activity_address = receiveBody.get('activity_address')
+        activity_owner = receiveBody.get('activity_owner')
+        activity_unit = receiveBody.get('activity_unit')
+        # 获取发起人自定义项
+        activity_item = receiveBody.get('activity_item')
+        # 把活动数据存入数据库
+        object = models.Activity.objects.create(activity_name=activity_name, activity_start_time=activity_start_time,
+                                                activity_end_time=activity_end_time,
+                                                activity_introduce=activity_introduce,
+                                                activity_address=activity_address,
+                                                activity_owner=activity_owner,
+                                                activity_unit=activity_unit, )
+        # 获取活动id
+        activity_id = object.activity_id
+        # 循环将自定义项信息放入数据库
+        for item in activity_item:
+            models.ActivityLogin.objects.create(activity_id=activity_id, info=item)
+        response = {}
+        response['activity_id'] = object
+        return JsonResponse(data=response, safe=False)
+
+
+# 二维码生成
+def qr_code(request):
+    if request.method == 'GET':
+        page = request.GET.get('page')
+        scene = request.GET.get('scene')
+        access_token = get_access_token()
+        if not access_token:
+            pass
+        else:
+            url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={}'.format(access_token)
+            data = {"scene": scene,
+                    "page": page,
+                    "width": 280,
+                    "line_color": {"r": 43, "g": 162, "b": 69},  # 自定义颜色
+                    "is_hyaline": True,
+                    }
+            # 发送post请求并获取返回值
+            response = requests.post(url, json=data)
+            print(response.content)
+            boolen = is_json(response)
+            response = {}
+            if boolen == 'False':
+                with open('qr_code.png', 'wb') as f:
+                    f.write(response.content)
+                return JsonResponse(data=f, safe=False)
+            elif boolen == 'True':
+                errors = json.loads(response)
+                errcode = errors["errcode"]
+                errmsg = errors["errmsg"]
+                if errors == 45009:
+                    response['error'] = '调用分钟频率受限，如需大量小程序码，建议预生成'
+                    return JsonResponse(data=response, safe=False)
+                if errors == 41030:
+                    response['error'] = '所传page页面不存在，或者小程序没有发布'
+                    return JsonResponse(data=response, safe=False)
+
+
+# 判断是否是json文件
+def is_json(myjson):
+    try:
+        json_object = json.loads(myjson)
+    except ValueError:
+        return False
+    return True
