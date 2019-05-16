@@ -35,6 +35,6 @@ urlpatterns = [
     url(r'^cancel2/', views.cancel_activity_sign),  # 取消报名
     url(r'^qr_code/', views.qr_code),  # 获取活动二维码
     url(r'^create-activity/', views.create_activity),  # 创建活动
-    # 获取个人信息
-    # 获取单个活动信息
+    url(r'^getuser/', views.accept_user_information),  # 获取个人信息
+    url(r'^getactivity/', views.accept_entry_form), # 获取单个活动信息
 ]

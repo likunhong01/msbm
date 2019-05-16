@@ -193,7 +193,7 @@ def get_access_token():
         return access_token
 
 
-# 提交报名表
+# 创建活动
 def create_activity(request):
     # 判断请求方式
     if request.method == 'POST':
@@ -228,7 +228,7 @@ def create_activity(request):
         for item in activity_item:
             models.ActivityLogin.objects.create(activity_id=activity_id, info=item)
         response = {}
-        response['activity_id'] = object
+        response['activity_id'] = activity_id
         return JsonResponse(data=response, safe=False)
 
 
@@ -321,26 +321,29 @@ def update_user_information(request):
         age = request.POST.get('age')
         classs = request.POST.get('classs')
         school = request.POST.get('school')
-        user = models.UserInformation.objects.get(user_id=user_id)
-        if user:
-            models.UserInformation.objects.update(user_name=user_name,
+        user = models.UserInformation.objects.filter(user_id=user_id)
+        print(user_name)
+        print('*' *50)
+        if len(user) == 1:
+            models.UserInformation.objects.update(user_id=user_id,
+                                                  user_name=user_name,
                                                   telephone=telephone,
                                                   school_number=school_number,
                                                   school=school,
                                                   sex=sex,
                                                   age=age,
-                                                  classs=classs)
+                                                  major_class=classs)
         else:
-            models.UserInformation.objects.create(user_name=user_name,
+            models.UserInformation.objects.create(user_id=user_id,
+                                                  user_name=user_name,
                                                   telephone=telephone,
                                                   school_number=school_number,
                                                   school=school,
                                                   sex=sex,
                                                   age=age,
-                                                  classs=classs)
-        response_dict = {
-            'status': True
-        }
+                                                  major_class=classs)
+        response_dict = {}
+        response_dict['status'] = True
         return JsonResponse(data=response_dict, safe=False)
 
 # 用户取消报名
@@ -353,3 +356,35 @@ def cancel_activity_sign(request):
             'status': True
         }
         return JsonResponse(data=response_dict, safe=False)
+
+# 获取个人信息
+def accept_user_information(request):
+    if request.method == 'GET':
+        user_id = request.GET.get('user_id')
+        response = {}
+        user = models.UserInformation.objects.get(user_id=user_id)
+        response['user_name'] = user.user_name
+        response['telephone'] = user.telephone
+        response['school'] = user.school
+        response['school_number'] = user.school_number
+        response['age'] = user.age
+        response['sex'] = user.sex
+        response['major_class'] = user.major_class
+        response['grade'] = user.grade
+        response['address'] = user.address
+
+        return JsonResponse(data=response, safe=False)
+
+
+# 获取报名表信息
+def accept_entry_form(request):
+    if request.method == 'GET':
+        # 从前端获取
+        activity_id = request.GET.get('activity_id')
+
+        # 首先获得这个活动的报名需要填的信息
+        need_info_fromsql = models.ActivityLogin.objects.filter(activity_id=activity_id)
+        need_infos = []
+        for info in need_info_fromsql:
+            need_infos.append(info.info)
+        return JsonResponse(data=need_infos, safe=False)
