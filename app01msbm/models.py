@@ -22,7 +22,7 @@ class UserInformation(models.Model):
 
 # 活动信息表
 class Activity(models.Model):
-    activity_id = models.IntegerField(verbose_name='活动编号', primary_key=True)
+    activity_id = models.AutoField(verbose_name='活动编号', primary_key=True)
     activity_name = models.CharField(verbose_name='活动名称', max_length=64)
     activity_start_time = models.DateTimeField(verbose_name='开始时间', default=timezone.now)
     activity_end_time = models.DateTimeField(verbose_name='截止时间')
@@ -30,13 +30,15 @@ class Activity(models.Model):
     activity_address = models.CharField(verbose_name='活动地址', max_length=64)
     activity_owner = models.ForeignKey(verbose_name='活动发起人', to='UserInformation', to_field='user_id', on_delete=models.CASCADE)
     activity_unit = models.CharField(verbose_name='活动主办单位', max_length=32)
+    activity_people_number = models.CharField(verbose_name='最大报名人数', max_length=4)
+    effective = models.IntegerField(verbose_name='活动是否有效，1有效，0无效', default=1)
 
 
 # 用户活动表（用户已报名的活动）
 class UserActivity(models.Model):
     user_id = models.ForeignKey(verbose_name='用户id', to='UserInformation', to_field='user_id', on_delete=models.CASCADE)
     activity_id = models.ForeignKey(verbose_name='活动', to='Activity', to_field='activity_id', on_delete=models.CASCADE)
-    effective = models.IntegerField(verbose_name='活动是否有效，1有效，0无效')
+    effective = models.IntegerField(verbose_name='活动是否有效，1有效，0无效', default=1)
 
 
 # 存储活动报名表的表

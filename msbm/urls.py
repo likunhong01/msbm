@@ -24,9 +24,17 @@ from app01msbm import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^login/', views.login),   # 获取openid
-    url(r'^mytable/', views.my_table),  # 获取我报名的活动
+    url(r'^myactivity/', views.my_table),  # 获取我报名的活动
     url(r'^mycreate/', views.my_create),    # 获取我创建的活动
     url(r'^activity/', views.activity), # 获取单个活动信息
     url(r'^applyuser/', views.apply_user),  # 获取单个活动的报名人列表
-    url(r'^downactivityexcel/', views.down_activity_excel),  # 下载excel
+    url(r'^down/', views.down_activity_excel),  # 下载excel
+    url(r'^submit-user/', views.update_user_information),  # 更新用户信息
+    url(r'^submit-form/', views.submit_form),  # 用户提交报名表
+    url(r'^cancel1/', views.cancel_activity),  # 取消活动
+    url(r'^cancel2/', views.cancel_activity_sign),  # 取消报名
+    url(r'^qr_code/', views.qr_code),  # 获取活动二维码
+    url(r'^create-activity/', views.create_activity),  # 创建活动
+    # 获取个人信息
+    # 获取单个活动信息
 ]

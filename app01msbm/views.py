@@ -188,11 +188,13 @@ def get_access_token():
         print(expires_in)
         if access_token and expires_in:
             cache.set(access_token_key, access_token, expires_in - 60)
+
+        '''这里返回的是什么东西？？？'''
         return access_token
 
 
 # 提交报名表
-def submit_entry_form(request):
+def create_activity(request):
     # 判断请求方式
     if request.method == 'POST':
         # 获取前端数据
@@ -203,8 +205,12 @@ def submit_entry_form(request):
         activity_end_time = receiveBody.get('activity_end_time')
         activity_introduce = receiveBody.get('activity_introduce')
         activity_address = receiveBody.get('activity_address')
-        activity_owner = receiveBody.get('activity_owner')
         activity_unit = receiveBody.get('activity_unit')
+        activity_people_number = receiveBody.get('activity_people_number')
+
+        activity_owner = receiveBody.get('activity_owner')
+        owner = models.UserInformation.objects.get(user_id=activity_owner)
+
         # 获取发起人自定义项
         activity_item = receiveBody.get('activity_item')
         # 把活动数据存入数据库
@@ -212,8 +218,10 @@ def submit_entry_form(request):
                                                 activity_end_time=activity_end_time,
                                                 activity_introduce=activity_introduce,
                                                 activity_address=activity_address,
-                                                activity_owner=activity_owner,
-                                                activity_unit=activity_unit, )
+                                                activity_owner=owner,
+                                                activity_unit=activity_unit,
+                                                activity_people_number=activity_people_number,
+                                                )
         # 获取活动id
         activity_id = object.activity_id
         # 循环将自定义项信息放入数据库
@@ -222,6 +230,7 @@ def submit_entry_form(request):
         response = {}
         response['activity_id'] = object
         return JsonResponse(data=response, safe=False)
+
 
 
 # 二维码生成
@@ -248,17 +257,15 @@ def qr_code(request):
             if boolen == 'False':
                 with open('qr_code.png', 'wb') as f:
                     f.write(response.content)
+                '''一直存在本地吗？存在本地的话要存到static文件夹里'''
                 return JsonResponse(data=f, safe=False)
             elif boolen == 'True':
                 errors = json.loads(response)
                 errcode = errors["errcode"]
                 errmsg = errors["errmsg"]
-                if errors == 45009:
-                    response['error'] = '调用分钟频率受限，如需大量小程序码，建议预生成'
-                    return JsonResponse(data=response, safe=False)
-                if errors == 41030:
-                    response['error'] = '所传page页面不存在，或者小程序没有发布'
-                    return JsonResponse(data=response, safe=False)
+                response['errcode'] = errcode
+                response['errmsg'] = errmsg
+                return JsonResponse(data=response, safe=False)
 
 
 # 判断是否是json文件
@@ -268,3 +275,81 @@ def is_json(myjson):
     except ValueError:
         return False
     return True
+
+# 删除报名表
+def cancel_activity(request):
+    if request.method == 'POST':
+        activity_id = request.POST.get('activity_id')
+        models.Activity.objects.filter(activity_id=activity_id).update(effective=0)
+        response_dict = {
+            'status': True
+        }
+        return JsonResponse(data=response_dict, safe=False)
+# ---------------------------------
+# 6.用户提交报名表
+def submit_form(request):
+    if request.method == 'POST':
+        # 获取用户信息
+        user_id = request.POST.get('openid')
+        activity_id = request.POST.get('activity_id')
+
+        # 获取到这个活动有哪些选项需要填
+        options = models.ActivityLogin.objects.filter(activity_id=activity_id)
+        options_name = []
+        for option in options:
+            options_name.append(option.info)
+
+        # 从前端获取这些值
+        # 把这些列存入数据库
+        for option_name in options_name:
+            now_info = request.POST.get(option_name)
+            models.UserActivityValue.objects.create(user_id=user_id, activity_id=activity_id, info=options_name,value=now_info)
+        response_dict = {
+            'status': True
+        }
+        return JsonResponse(data=response_dict, safe=False)
+
+
+# 修改个人信息
+def update_user_information(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        user_name = request.POST.get('user_name')
+        telephone = request.POST.get('telephone')
+        school_number = request.POST.get('school_number')
+        sex = request.POST.get('sex')
+        age = request.POST.get('age')
+        classs = request.POST.get('classs')
+        school = request.POST.get('school')
+        user = models.UserInformation.objects.get(user_id=user_id)
+        if user:
+            models.UserInformation.objects.update(user_name=user_name,
+                                                  telephone=telephone,
+                                                  school_number=school_number,
+                                                  school=school,
+                                                  sex=sex,
+                                                  age=age,
+                                                  classs=classs)
+        else:
+            models.UserInformation.objects.create(user_name=user_name,
+                                                  telephone=telephone,
+                                                  school_number=school_number,
+                                                  school=school,
+                                                  sex=sex,
+                                                  age=age,
+                                                  classs=classs)
+        response_dict = {
+            'status': True
+        }
+        return JsonResponse(data=response_dict, safe=False)
+
+# 用户取消报名
+def cancel_activity_sign(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        activity_id = request.POST.get('activity_id')
+        models.UserActivity.objects.filter(user_id=user_id, activity_id=activity_id).update(effective=0)
+        response_dict = {
+            'status': True
+        }
+        return JsonResponse(data=response_dict, safe=False)
