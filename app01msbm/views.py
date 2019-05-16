@@ -68,7 +68,7 @@ def my_create(request):
 
         return JsonResponse(data=response, safe=False)
 
-# 单个表处理
+# 获取单个活动信息
 def activity(request):
     if request.method == 'GET':
         activity_id = request.GET.get('activity_id')
@@ -198,21 +198,19 @@ def create_activity(request):
     # 判断请求方式
     if request.method == 'POST':
         # 获取前端数据
-        receiveBody = request.body
-        receiveBody = json.loads(receiveBody)
-        activity_name = receiveBody.get('activity_name')
-        activity_start_time = receiveBody.get('activity_start_time')
-        activity_end_time = receiveBody.get('activity_end_time')
-        activity_introduce = receiveBody.get('activity_introduce')
-        activity_address = receiveBody.get('activity_address')
-        activity_unit = receiveBody.get('activity_unit')
-        activity_people_number = receiveBody.get('activity_people_number')
+        activity_name = request.POST.get('activity_name')
+        activity_start_time = request.POST.get('activity_start_time')
+        activity_end_time = request.POST.get('activity_end_time')
+        activity_introduce = request.POST.get('activity_introduce')
+        activity_address = request.POST.get('activity_address')
+        activity_owner = request.POST.get('activity_owner')
+        activity_unit = request.POST.get('activity_unit')
+        activity_people_number = request.POST.get('activity_people_number')
 
-        activity_owner = receiveBody.get('activity_owner')
         owner = models.UserInformation.objects.get(user_id=activity_owner)
 
         # 获取发起人自定义项
-        activity_item = receiveBody.get('activity_item')
+        activity_item = request.POST.get('activity_item')
         # 把活动数据存入数据库
         object = models.Activity.objects.create(activity_name=activity_name, activity_start_time=activity_start_time,
                                                 activity_end_time=activity_end_time,
