@@ -1,9 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.core.cache import cache
 import requests, json
 from app01msbm import models
 import xlwt
+import os
 from django.db.models import Sum,Count
 # Create your views here.
 
@@ -49,7 +50,7 @@ def my_table(request):
         return JsonResponse(data=response, safe=False)
 
 def my_create(request):
-    # 返回自己创建的活动的列表
+    # 返回创建的活动的列表
     if request.method == 'GET':
         openid = request.GET.get('openid')
         joined_activities = models.Activity.objects.filter(activity_owner=openid, effective=1)
@@ -61,9 +62,12 @@ def my_create(request):
             # 获取名称， 起止时间，发起人单位， 活动id，存入字典
             act['activity_unit'] = activity.activity_unit
             act['activity_name'] = activity.activity_name
-            act['activity_start_time'] = activity.activity_start_time
-            act['activity_end_time'] = activity.activity_end_time
+            act['activity_start_time'] = activity.activity_start_time.strftime('%Y-%m-%d')
+            act['activity_end_time'] = activity.activity_end_time.strftime('%Y-%m-%d')
             act['activity_id'] = activity.activity_id
+            act['activity_max'] = activity.activity_people_number # 最大报名人数
+            apply_count = len(models.UserActivity.objects.filter(activity_id=activity.activity_id))
+            act['activity_count'] = apply_count
             response.append(act)
 
         return JsonResponse(data=response, safe=False)
@@ -75,11 +79,15 @@ def activity(request):
         activity = models.Activity.objects.get(activity_id=activity_id)
         response = {}
         response['activity_name'] = activity.activity_name
-        response['activity_start_time'] = activity.activity_start_time
-        response['activity_end_time'] = activity.activity_end_time
+        response['activity_start_time'] = activity.activity_start_time.strftime('%Y-%m-%d')
+        response['activity_end_time'] = activity.activity_end_time.strftime('%Y-%m-%d')
         response['activity_introduce'] = activity.activity_introduce
         response['activity_address'] = activity.activity_address
-        response['activity_owner'] = activity.activity_owner
+        response['activity_unit'] = activity.activity_unit
+        response['activity_owner'] = activity.activity_owner.user_id
+        response['activity_owner_tel'] = activity.activity_owner.telephone
+        response['activity_max'] = activity.activity_people_number
+        response['activity_apply_number'] = len(models.UserActivity.objects.filter(activity_id=activity_id))
 
         return JsonResponse(data=response, safe=False)
 
@@ -184,12 +192,11 @@ def get_access_token():
         access_token = json.loads(token_response.text).get('access_token')
         # 获取有效时间
         expires_in = json.loads(token_response.text).get('expires_in')
-        print(access_token)
-        print(expires_in)
+        # print(access_token)
+        # print(expires_in)
         if access_token and expires_in:
             cache.set(access_token_key, access_token, expires_in - 60)
 
-        '''这里返回的是什么东西？？？'''
         return access_token
 
 
@@ -210,7 +217,7 @@ def create_activity(request):
         owner = models.UserInformation.objects.get(user_id=activity_owner)
 
         # 获取发起人自定义项
-        activity_item = request.POST.get('activity_item')
+        activity_item = request.POST.get('activity_item').split(',')
         # 把活动数据存入数据库
         object = models.Activity.objects.create(activity_name=activity_name, activity_start_time=activity_start_time,
                                                 activity_end_time=activity_end_time,
@@ -224,7 +231,7 @@ def create_activity(request):
         activity_id = object.activity_id
         # 循环将自定义项信息放入数据库
         for item in activity_item:
-            models.ActivityLogin.objects.create(activity_id=activity_id, info=item)
+            models.ActivityLogin.objects.create(activity_id=object, info=item)
         response = {}
         response['activity_id'] = activity_id
         return JsonResponse(data=response, safe=False)
@@ -234,45 +241,81 @@ def create_activity(request):
 # 二维码生成
 def qr_code(request):
     if request.method == 'GET':
-        page = request.GET.get('page')
+        # page = request.GET.get('page')
         scene = request.GET.get('scene')
         access_token = get_access_token()
-        if not access_token:
-            pass
+        # if not access_token:
+        #     pass
+        # else:
+        url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={}'.format(access_token)
+        data = {"scene": scene,
+                # "page": page,
+                }
+        # 发送post请求并获取返回值
+        qr_response = requests.post(url, json=data)
+
+        # print(response.content)
+        # boolen = is_json(qr_response.content)
+        try:
+            errors = json.loads(qr_response)
+
+        except:
+            # 如果出错，就是一个图片，返回回去
+            with open('static/qrimg/'+ scene + '.jpg', 'wb') as f:
+                f.write(qr_response.content)
+            f.close()
+
+            # f = open(os.path.join('static/qrimg/', scene + '.png'), 'wb')
+            # f.write(qr_response.content)
+            # f.close()
+
+
+
+            # image_data = f.read()
+
+            # return HttpResponse(image_data, content_type="image/png")
+            # return redirect('http://www.ifeels.cn:35558/qucode-' + scene + '/')
+            # return HttpResponse(qr_response.content)
+            return JsonResponse(data={'url':'http://www.ifeels.cn:35558/static/qrimg/' + scene + '.jpg/'},safe=False)
         else:
-            url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={}'.format(access_token)
-            data = {"scene": scene,
-                    "page": page,
-                    "width": 280,
-                    "line_color": {"r": 43, "g": 162, "b": 69},  # 自定义颜色
-                    "is_hyaline": True,
-                    }
-            # 发送post请求并获取返回值
-            response = requests.post(url, json=data)
-            print(response.content)
-            boolen = is_json(response)
+            with open('static/qrimg/'+ scene + '.txt', 'wb') as f:
+                f.write(qr_response.content)
+            f.close()
+            errcode = errors["errcode"]
+            errmsg = errors["errmsg"]
             response = {}
-            if boolen == 'False':
-                with open('qr_code.png', 'wb') as f:
-                    f.write(response.content)
-                '''一直存在本地吗？存在本地的话要存到static文件夹里'''
-                return JsonResponse(data=f, safe=False)
-            elif boolen == 'True':
-                errors = json.loads(response)
-                errcode = errors["errcode"]
-                errmsg = errors["errmsg"]
-                response['errcode'] = errcode
-                response['errmsg'] = errmsg
-                return JsonResponse(data=response, safe=False)
+            response['errcode'] = errcode
+            response['errmsg'] = errmsg
+            return JsonResponse(data=response, safe=False)
 
+        #
+        #
+        # if boolen:
+        #     errors = json.loads(response)
+        #     errcode = errors["errcode"]
+        #     errmsg = errors["errmsg"]
+        #     response['errcode'] = errcode
+        #     response['errmsg'] = errmsg
+        #     return JsonResponse(data=response, safe=False)
+        # else:
+        #     # with open('qr_code.png', 'wb') as f:
+        #     #     f.write(response.content.decode())
+        #     # img_data = qr_response
+        #     # return redirect('http://www.ifeels.cn:35558/qucode-' + scene + '/')
+        #
 
-# 判断是否是json文件
-def is_json(myjson):
-    try:
-        json_object = json.loads(myjson)
-    except ValueError:
-        return False
-    return True
+def get_qr_img(request):
+    aid = request.GET.get('scene')
+    path = '/static/qrimg/' + aid + '.png'
+    return render(request, 'qrcode.html', {'path':path})
+
+# # 判断是否是json文件
+# def is_json(myjson):
+#     try:
+#         json_object = json.loads(myjson)
+#     except TypeError, e:
+#         return False
+#     return True
 
 # 删除报名表
 def cancel_activity(request):
@@ -290,7 +333,8 @@ def submit_form(request):
         # 获取用户信息
         user_id = request.POST.get('openid')
         activity_id = request.POST.get('activity_id')
-
+        user_id_ob = models.UserInformation.objects.get(user_id=user_id)
+        activity_id_ob = models.Activity.objects.get(activity_id=activity_id)
         # 获取到这个活动有哪些选项需要填
         options = models.ActivityLogin.objects.filter(activity_id=activity_id)
         options_name = []
@@ -298,10 +342,30 @@ def submit_form(request):
             options_name.append(option.info)
 
         # 从前端获取这些值
+        # user_values = request.POST.get('user_values').split(',')
         # 把这些列存入数据库
+        user_dict = request.POST.get('user_dict')
+        user_dict = json.loads(user_dict)
+        # f = open('aaaaa.txt','w+')
+        # f.write(user_dict)
+        # user_dict_f = {}
+        # strs = user_dict.split(',')
+        # # 得到  [姓名:"ljx"]
+        # for str in strs:
+        #     str.split(':')
+        #     str[1].split('"')
+        #     user_dict_f[str[0]] = str[1]
+        #     f.write(str[1])
+        #     f.close()
+        #     models.UserActivityValue.objects.create(user_id=user_id_ob, activity_id=activity_id_ob, info=str[0],
+        #                                             value=str[1])
+
         for option_name in options_name:
-            now_info = request.POST.get(option_name)
-            models.UserActivityValue.objects.create(user_id=user_id, activity_id=activity_id, info=options_name,value=now_info)
+            now_info = user_dict[option_name]
+            models.UserActivityValue.objects.create(user_id=user_id_ob, activity_id=activity_id_ob, info=option_name,value=now_info)
+        # for i in range(len(options_name)):
+        #     models.UserActivityValue.objects.create(user_id=user_id_ob, activity_id=activity_id_ob, info=options_name[i],
+        #                                             value=user_values[i])
         response_dict = {
             'status': True
         }
@@ -379,10 +443,9 @@ def accept_entry_form(request):
     if request.method == 'GET':
         # 从前端获取
         activity_id = request.GET.get('activity_id')
-
         # 首先获得这个活动的报名需要填的信息
         need_info_fromsql = models.ActivityLogin.objects.filter(activity_id=activity_id)
-        need_infos = []
+        need_info_dict = {}
         for info in need_info_fromsql:
-            need_infos.append(info.info)
-        return JsonResponse(data=need_infos, safe=False)
+            need_info_dict[info.info] = info.info
+        return JsonResponse(data=need_info_dict, safe=False)
