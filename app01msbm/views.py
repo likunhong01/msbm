@@ -357,6 +357,7 @@ def submit_form(request):
         is_apply = models.UserActivity.objects.filter(user_id=user_id_ob,activity_id=activity_id_ob)
         if len(is_apply) > 0 :
             # 说明已经报过名，筛选出用户id和活动id匹配的行
+            is_apply.update(effective=1)
             values = models.UserActivityValue.objects.filter(user_id=user_id_ob, activity_id=activity_id_ob)
             for option_name in options_name:
                 # 对于每个要填入的列循环，从前端获取，并更新进入数据库
