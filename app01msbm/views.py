@@ -490,9 +490,13 @@ def user_idea(request):
     if request.method == 'POST':
         content = request.POST.get('content')
         user_id = request.POST.get('openid')
+        name = models.UserInformation.objects.get(user_id=user_id).user_name
         # 文件写入
         with open('static/user_feedback.txt', 'a+') as f:
+            f.write(name)
+            f.write(':')
             f.write(content)
+            f.write('\n')
         f.close()
         response = {}
         response['status'] = 1
