@@ -40,12 +40,12 @@ def my_table(request):
             # 一个活动的字典
             act = {}
             # 获取名称， 起止时间，发起人单位， 活动id，存入字典
-            act['activity_unit'] = activity.activity_unit
-            act['activity_name'] = activity.activity_name
-            act['activity_start_time'] = activity.activity_start_time
-            act['activity_end_time'] = activity.activity_end_time
-            act['activity_id'] = activity.activity_id
-            response.append(act)
+            act['activity_unit'] = activity.activity_id.activity_unit
+            act['activity_name'] = activity.activity_id.activity_name
+            act['activity_start_time'] = activity.activity_id.activity_start_time.strftime('%Y-%m-%d')
+            act['activity_end_time'] = activity.activity_id.activity_end_time.strftime('%Y-%m-%d')
+            act['activity_id'] = activity.activity_id.activity_id
+            response.insert(0,act)
 
         return JsonResponse(data=response, safe=False)
 
@@ -66,9 +66,9 @@ def my_create(request):
             act['activity_end_time'] = activity.activity_end_time.strftime('%Y-%m-%d')
             act['activity_id'] = activity.activity_id
             act['activity_max'] = activity.activity_people_number # 最大报名人数
-            apply_count = len(models.UserActivity.objects.filter(activity_id=activity.activity_id))
+            apply_count = len(models.UserActivity.objects.filter(activity_id=activity.activity_id,effective=1))
             act['activity_count'] = apply_count
-            response.append(act)
+            response.insert(0, act)
 
         return JsonResponse(data=response, safe=False)
 
@@ -87,7 +87,7 @@ def activity(request):
         response['activity_owner'] = activity.activity_owner.user_id
         response['activity_owner_tel'] = activity.activity_owner.telephone
         response['activity_max'] = activity.activity_people_number
-        response['activity_apply_number'] = len(models.UserActivity.objects.filter(activity_id=activity_id))
+        response['activity_apply_number'] = len(models.UserActivity.objects.filter(activity_id=activity_id,effective=1))
 
         return JsonResponse(data=response, safe=False)
 
@@ -95,14 +95,21 @@ def activity(request):
 def apply_user(request):
     if request.method == 'GET':
         activity_id = request.GET.get('activity_id')
-        users = models.UserActivity.objects.filter(activity_id=activity_id, effective=1)
+        activity_id_ob = models.Activity.objects.get(activity_id=activity_id)
+        users = models.UserActivity.objects.filter(activity_id=activity_id_ob, effective=1)
         peoples = []
-        '''!!!!!!!!!!!!!!缺少存到文件里的代码'''
         for user in users:
+            # user.user_id
+            # activity_id_ob
+            # UserActivityValue
+            # 查name和tell
+
             people = {}
-            now_people = models.UserInformation.objects.get(user_id=user.user_id)
-            people['user_name'] = now_people.user_name
-            people['telephone'] = now_people.telephone
+            # now_people = models.UserInformation.objects.get(user_id=user.user_id)
+            # now_people = models.UserInformation.objects.get(user_id=user.user_id)
+
+            people['user_name'] = user.user_id.user_name
+            people['telephone'] = user.user_id.telephone
             peoples.append(people)
 
         return JsonResponse(data=peoples, safe=False)
@@ -139,7 +146,6 @@ def down_activity_excel(request):
 
 
         # 把回复前端的response内的字典数据转化为excel文件
-        '''待完成'''
         excel_content = []  # 要写入excel的二维列表
         excel_content.append(need_infos)    # 先写入标题（列名称）
         # 对回应的response数组取每个人的信息（字典格式）
@@ -317,10 +323,10 @@ def get_qr_img(request):
 #         return False
 #     return True
 
-# 删除报名表
+# 删除报名表(取消活动)
 def cancel_activity(request):
-    if request.method == 'POST':
-        activity_id = request.POST.get('activity_id')
+    if request.method == 'GET':
+        activity_id = request.GET.get('activity_id')
         models.Activity.objects.filter(activity_id=activity_id).update(effective=0)
         response_dict = {
             'status': True
@@ -346,26 +352,24 @@ def submit_form(request):
         # 把这些列存入数据库
         user_dict = request.POST.get('user_dict')
         user_dict = json.loads(user_dict)
-        # f = open('aaaaa.txt','w+')
-        # f.write(user_dict)
-        # user_dict_f = {}
-        # strs = user_dict.split(',')
-        # # 得到  [姓名:"ljx"]
-        # for str in strs:
-        #     str.split(':')
-        #     str[1].split('"')
-        #     user_dict_f[str[0]] = str[1]
-        #     f.write(str[1])
-        #     f.close()
-        #     models.UserActivityValue.objects.create(user_id=user_id_ob, activity_id=activity_id_ob, info=str[0],
-        #                                             value=str[1])
 
-        for option_name in options_name:
-            now_info = user_dict[option_name]
-            models.UserActivityValue.objects.create(user_id=user_id_ob, activity_id=activity_id_ob, info=option_name,value=now_info)
-        # for i in range(len(options_name)):
-        #     models.UserActivityValue.objects.create(user_id=user_id_ob, activity_id=activity_id_ob, info=options_name[i],
-        #                                             value=user_values[i])
+        # 判断如果用户已经报名，那么就直接覆盖掉
+        is_apply = models.UserActivity.objects.filter(user_id=user_id_ob,activity_id=activity_id_ob)
+        if len(is_apply) > 0 :
+            # 说明已经报过名，筛选出用户id和活动id匹配的行
+            values = models.UserActivityValue.objects.filter(user_id=user_id_ob, activity_id=activity_id_ob)
+            for option_name in options_name:
+                # 对于每个要填入的列循环，从前端获取，并更新进入数据库
+                now_info = user_dict[option_name]
+                values.filter(info=option_name).update(value=now_info)
+
+        # 如果没有报名，那就创建报名信息
+        else:
+            models.UserActivity.objects.create(user_id=user_id_ob, activity_id=activity_id_ob)
+            for option_name in options_name:
+                now_info = user_dict[option_name]
+                models.UserActivityValue.objects.create(user_id=user_id_ob, activity_id=activity_id_ob, info=option_name,value=now_info)
+
         response_dict = {
             'status': True
         }
@@ -410,10 +414,12 @@ def update_user_information(request):
 
 # 用户取消报名
 def cancel_activity_sign(request):
-    if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        activity_id = request.POST.get('activity_id')
-        models.UserActivity.objects.filter(user_id=user_id, activity_id=activity_id).update(effective=0)
+    if request.method == 'GET':
+        user_id = request.GET.get('openid')
+        activity_id = request.GET.get('activity_id')
+        user_id_ob = models.UserInformation.objects.get(user_id=user_id)
+        activity_id_ob = models.Activity.objects.get(activity_id=activity_id)
+        models.UserActivity.objects.filter(user_id=user_id_ob, activity_id=activity_id_ob).update(effective=0)
         response_dict = {
             'status': True
         }
@@ -449,3 +455,19 @@ def accept_entry_form(request):
         for info in need_info_fromsql:
             need_info_dict[info.info] = info.info
         return JsonResponse(data=need_info_dict, safe=False)
+
+
+# 判断用户是否报名
+def is_apply(request):
+    if request.method == 'GET':
+        # 从前端获取
+        activity_id = request.GET.get('activity_id')
+        openid = request.GET.get('openid')
+        # 首先获得这个活动的报名需要填的信息
+        user_activity = models.UserActivity.objects.filter(activity_id=activity_id, user_id=openid, effective=1)
+        response = {}
+        if len(user_activity) > 0 :
+            response['is_apply'] = 1
+        else:
+            response['is_apply'] = 0
+        return JsonResponse(data=response, safe=False)

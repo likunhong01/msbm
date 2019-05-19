@@ -38,4 +38,5 @@ urlpatterns = [
     url(r'^getuser/', views.accept_user_information),  # 获取个人信息
     url(r'^getactivity/', views.accept_entry_form), # 获取单个活动信息
     url(r'^getqr/', views.get_qr_img), # 获取图片
+    url(r'^is-apply/', views.is_apply), # 获取用户是否报名活动
 ]
