@@ -464,11 +464,36 @@ def is_apply(request):
         # 从前端获取
         activity_id = request.GET.get('activity_id')
         openid = request.GET.get('openid')
-        # 首先获得这个活动的报名需要填的信息
         user_activity = models.UserActivity.objects.filter(activity_id=activity_id, user_id=openid, effective=1)
         response = {}
         if len(user_activity) > 0 :
             response['is_apply'] = 1
         else:
             response['is_apply'] = 0
+        return JsonResponse(data=response, safe=False)
+
+# 判断是否存在这个用户
+def has_user(request):
+    if request.method == 'GET':
+        # 从前端获取
+        openid = request.GET.get('openid')
+        user = models.UserInformation.objects.filter(user_id=openid)
+        response = {}
+        if len(user) > 0 :
+            response['has_user'] = 1
+        else:
+            response['has_user'] = 0
+        return JsonResponse(data=response, safe=False)
+
+# 用户反馈
+def user_idea(request):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        user_id = request.POST.get('openid')
+        # 文件写入
+        with open('static/user_feedback.txt', 'a+') as f:
+            f.write(content)
+        f.close()
+        response = {}
+        response['status'] = 1
         return JsonResponse(data=response, safe=False)
