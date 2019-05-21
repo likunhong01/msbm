@@ -312,7 +312,7 @@ def qr_code(request):
 
 def get_qr_img(request):
     aid = request.GET.get('scene')
-    path = 'msbms/tatic/qrimg/' + str(aid) + '.jpg'
+    path = 'msbms/static/qrimg/' + str(aid) + '.jpg'
     return render(request, 'qrcode.html', {'path':path})
 
 # # 判断是否是json文件
