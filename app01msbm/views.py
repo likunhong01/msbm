@@ -282,7 +282,7 @@ def qr_code(request):
             # return HttpResponse(image_data, content_type="image/png")
             # return redirect('http://www.ifeels.cn:35558/qucode-' + scene + '/')
             # return HttpResponse(qr_response.content)
-            return JsonResponse(data={'url':'http://www.ifeels.cn:35558/static/qrimg/' + scene + '.jpg/'},safe=False)
+            return JsonResponse(data={'url':'https://www.ifeels.cn/msbmstatic/qrimg/' + scene + '.jpg/'},safe=False)
         else:
             with open('static/qrimg/'+ scene + '.txt', 'wb') as f:
                 f.write(qr_response.content)
@@ -312,7 +312,7 @@ def qr_code(request):
 
 def get_qr_img(request):
     aid = request.GET.get('scene')
-    path = '/static/qrimg/' + aid + '.png'
+    path = 'msbms/tatic/qrimg/' + str(aid) + '.jpg'
     return render(request, 'qrcode.html', {'path':path})
 
 # # 判断是否是json文件
@@ -501,3 +501,6 @@ def user_idea(request):
         response = {}
         response['status'] = 1
         return JsonResponse(data=response, safe=False)
+
+def ok(request):
+    return HttpResponse('ok')
