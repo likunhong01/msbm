@@ -134,7 +134,10 @@ def down_activity_excel(request):
         users = []
         for activity_info in activity_infos:
             if activity_info.user_id not in users:
-                users.append(activity_info.user_id)
+                # 加个判断，用户活动表是否有效
+                flag = models.UserActivity.objects.filter(user_id=activity_info.user_id, activity_id=activity_id,effective=1)
+                if len(flag) > 0:
+                    users.append(activity_info.user_id)
         # 然后对每个用户分组获取他们填的信息
         for user in users:
             now_user = {}   # 用户报名信息的字典
