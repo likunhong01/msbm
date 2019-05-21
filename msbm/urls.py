@@ -42,4 +42,5 @@ urlpatterns = [
     url(r'^msbm/has-user/', views.has_user), # 获取是否有用户
     url(r'^msbm/user_idea/', views.user_idea), # 用户反馈
     url(r'^msbm/ok/', views.ok), # 用户反馈
+    url(r'^msbm/path/', views.path_to_scene), # 改path返回scene
 ]

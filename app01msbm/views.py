@@ -383,32 +383,35 @@ def update_user_information(request):
         user_id = request.POST.get('user_id')
         user_name = request.POST.get('user_name')
         telephone = request.POST.get('telephone')
-        school_number = request.POST.get('school_number')
+        # school_number = request.POST.get('school_number')
         sex = request.POST.get('sex')
         age = request.POST.get('age')
-        classs = request.POST.get('classs')
-        school = request.POST.get('school')
+        # classs = request.POST.get('classs')
+        # school = request.POST.get('school')
         user = models.UserInformation.objects.filter(user_id=user_id)
-        print(user_name)
-        print('*' *50)
+        # print(user_name)
+        # print('*' *50)
         if len(user) == 1:
-            models.UserInformation.objects.update(user_id=user_id,
-                                                  user_name=user_name,
-                                                  telephone=telephone,
-                                                  school_number=school_number,
-                                                  school=school,
-                                                  sex=sex,
-                                                  age=age,
-                                                  major_class=classs)
+            # models.UserInformation.objects.update(user_id=user_id,
+            #                                       user_name=user_name,
+            #                                       telephone=telephone,
+            #                                       # school_number=school_number,
+            #                                       # school=school,
+            #                                       sex=sex,
+            #                                       age=age,
+            #                                       # major_class=classs
+            #                                       )
+            user.update(user_name=user_name,telephone=telephone,sex=sex,age=age,)
         else:
             models.UserInformation.objects.create(user_id=user_id,
                                                   user_name=user_name,
                                                   telephone=telephone,
-                                                  school_number=school_number,
-                                                  school=school,
+                                                  # school_number=school_number,
+                                                  # school=school,
                                                   sex=sex,
                                                   age=age,
-                                                  major_class=classs)
+                                                  # major_class=classs
+                                                  )
         response_dict = {}
         response_dict['status'] = True
         return JsonResponse(data=response_dict, safe=False)
@@ -504,3 +507,9 @@ def user_idea(request):
 
 def ok(request):
     return HttpResponse('ok')
+
+def path_to_scene(request):
+    path = request.GET.get('path')
+    response = {}
+    response['scene'] = path.split('=')[1]
+    return JsonResponse(data=response, safe=False)

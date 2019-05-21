@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f351d938-1fc3-4a94-ba56-739f9f4f1e2e" name="Default" comment="" />
+    <list default="true" id="f351d938-1fc3-4a94-ba56-739f9f4f1e2e" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app01msbm/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/app01msbm/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msbm/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/msbm/urls.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -44,11 +48,26 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="user_feedback.txt" pinned="true" current-in-tab="true">
-        <entry file="remoteDeploymentFS://&lt;87a3d858-4743-4713-a895-3f684c31ffea&gt;/root/msbm/static/user_feedback.txt">
+      <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/app01msbm/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="44">
-              <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+            <state relative-caret-position="275">
+              <caret line="510" column="19" selection-start-line="510" selection-start-column="19" selection-end-line="510" selection-end-column="19" />
+              <folding>
+                <element signature="e#0#45#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="urls.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/msbm/urls.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="333">
+              <caret line="44" column="39" selection-start-line="44" selection-start-column="39" selection-end-line="44" selection-end-column="39" />
+              <folding>
+                <element signature="e#628#660#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -76,6 +95,7 @@
         <option value="&lt;87a3d858-4743-4713-a895-3f684c31ffea&gt;/root/msbm/static/user_feedback.txt" />
         <option value="&lt;87a3d858-4743-4713-a895-3f684c31ffea&gt;/root/ifeels/Ifells/ifeels_uwsgi.ini" />
         <option value="&lt;87a3d858-4743-4713-a895-3f684c31ffea&gt;/root/msbm/msbm_uwsgi.ini" />
+        <option value="&lt;87a3d858-4743-4713-a895-3f684c31ffea&gt;/root/msbm/log/uwsgi-9222.log.1558442781" />
         <option value="$PROJECT_DIR$/msbm/urls.py" />
         <option value="$PROJECT_DIR$/app01msbm/views.py" />
       </list>
@@ -87,7 +107,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-11" />
     <option name="y" value="-11" />
     <option name="width" value="981" />
@@ -219,8 +239,8 @@
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.2851852" />
-      <window_info anchor="right" id="Remote Host" order="3" visible="true" weight="0.22473727" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18270008" />
+      <window_info active="true" anchor="right" id="Remote Host" order="3" visible="true" weight="0.20452708" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.18270008" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" weight="0.21341956" />
       <window_info anchor="right" id="SciView" order="3" weight="0.32983023" />
@@ -698,8 +718,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/msbm/urls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="230">
-          <caret line="35" column="35" selection-start-line="35" selection-start-column="35" selection-end-line="35" selection-end-column="35" />
+        <state relative-caret-position="333">
+          <caret line="44" column="39" selection-start-line="44" selection-start-column="39" selection-end-line="44" selection-end-column="39" />
           <folding>
             <element signature="e#628#660#0" expanded="true" />
           </folding>
@@ -708,8 +728,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app01msbm/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-53">
-          <caret line="247" column="4" selection-start-line="247" selection-start-column="4" selection-end-line="247" selection-end-column="4" />
+        <state relative-caret-position="275">
+          <caret line="510" column="19" selection-start-line="510" selection-start-column="19" selection-end-line="510" selection-end-column="19" />
           <folding>
             <element signature="e#0#45#0" expanded="true" />
           </folding>
