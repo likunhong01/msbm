@@ -43,4 +43,5 @@ urlpatterns = [
     url(r'^msbm/user_idea/', views.user_idea), # 用户反馈
     url(r'^msbm/ok/', views.ok), # 用户反馈
     url(r'^msbm/path/', views.path_to_scene), # 改path返回scene
+    url(r'^msbm/e-activity/', views.e_activity), # 查看活动是否有效
 ]

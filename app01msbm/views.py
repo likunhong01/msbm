@@ -516,3 +516,11 @@ def path_to_scene(request):
     response = {}
     response['scene'] = path.split('=')[1]
     return JsonResponse(data=response, safe=False)
+
+def e_activity(request):
+    if request.method == 'GET':
+        activity_id = request.GET.get('activity_id')
+        effective = models.Activity.objects.get(activity_id=activity_id).effective
+        response = {}
+        response['effective'] = effective
+        return JsonResponse(data=response, safe=False)
