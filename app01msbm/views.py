@@ -201,8 +201,6 @@ def get_access_token():
         access_token = json.loads(token_response.text).get('access_token')
         # 获取有效时间
         expires_in = json.loads(token_response.text).get('expires_in')
-        # print(access_token)
-        # print(expires_in)
         if access_token and expires_in:
             cache.set(access_token_key, access_token, expires_in - 60)
 
@@ -250,41 +248,21 @@ def create_activity(request):
 # 二维码生成
 def qr_code(request):
     if request.method == 'GET':
-        # page = request.GET.get('page')
+        page = request.GET.get('page')
         scene = request.GET.get('scene')
         access_token = get_access_token()
-        # if not access_token:
-        #     pass
-        # else:
         url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={}'.format(access_token)
-        data = {"scene": scene,
-                # "page": page,
-                }
+        data = {"scene": scene,'page':page,}
         # 发送post请求并获取返回值
         qr_response = requests.post(url, json=data)
 
-        # print(response.content)
-        # boolen = is_json(qr_response.content)
         try:
-            errors = json.loads(qr_response)
-
+            errors = json.loads(qr_response.text)
         except:
             # 如果出错，就是一个图片，返回回去
             with open('static/qrimg/'+ scene + '.jpg', 'wb') as f:
                 f.write(qr_response.content)
             f.close()
-
-            # f = open(os.path.join('static/qrimg/', scene + '.png'), 'wb')
-            # f.write(qr_response.content)
-            # f.close()
-
-
-
-            # image_data = f.read()
-
-            # return HttpResponse(image_data, content_type="image/png")
-            # return redirect('http://www.ifeels.cn:35558/qucode-' + scene + '/')
-            # return HttpResponse(qr_response.content)
             return JsonResponse(data={'url':'https://www.ifeels.cn/msbmstatic/qrimg/' + scene + '.jpg/'},safe=False)
         else:
             with open('static/qrimg/'+ scene + '.txt', 'wb') as f:
@@ -296,22 +274,6 @@ def qr_code(request):
             response['errcode'] = errcode
             response['errmsg'] = errmsg
             return JsonResponse(data=response, safe=False)
-
-        #
-        #
-        # if boolen:
-        #     errors = json.loads(response)
-        #     errcode = errors["errcode"]
-        #     errmsg = errors["errmsg"]
-        #     response['errcode'] = errcode
-        #     response['errmsg'] = errmsg
-        #     return JsonResponse(data=response, safe=False)
-        # else:
-        #     # with open('qr_code.png', 'wb') as f:
-        #     #     f.write(response.content.decode())
-        #     # img_data = qr_response
-        #     # return redirect('http://www.ifeels.cn:35558/qucode-' + scene + '/')
-        #
 
 def get_qr_img(request):
     aid = request.GET.get('scene')
